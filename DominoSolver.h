@@ -16,12 +16,11 @@ public:
 	void input_tiles(vector<short> t);
 	vector<vector<DominoTile*>> solve_train();
 	void print_solved_train();
+	void build_tile_numbers();
 private:	
 	short starting_tile;
 	vector<DominoTile> tiles;
 	vector<vector<DominoTile*>> tile_numbers;
-
-	void build_tile_numbers();
 };
 
 #endif // DOMINO_SOLVER_H
