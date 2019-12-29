@@ -77,14 +77,14 @@ void DominoSolver::build_tile_numbers() {
 		tile_numbers[tile->first].push_back(tile);
 		tile_numbers[tile->second].push_back(tile);
 	}
-	for (int x = 0; x < tile_numbers.size(); x++) {
+/*	for (int x = 0; x < tile_numbers.size(); x++) {
 		cout << x << ": ";
 		for (int y = 0; y < tile_numbers[x].size(); y++) {
 			DominoTile* tmp = tile_numbers[x][y];
 			cout << tmp->first << " " << tmp->second << "   ";
 		}
 		cout << "\n";
-	}
+	}*/
 }
 
 vector<vector<DominoTile*>> DominoSolver::solve_train(){
@@ -105,18 +105,22 @@ vector<vector<DominoTile*>> DominoSolver::solve_train(){
 		DominoTile* tile = nullptr;
 		for (int index = 0; index < tile_numbers[current_number].size(); index++) {
 			tile = tile_numbers[current_number][index];
-			if (current_used.count(tile) == 0 && tried_tiles.top().count(tile) == 0) {
-				current_train.push_back(tile);
-				current_used.emplace(tile);
-				//cout << "first: " << tile->first << " second: " << tile->second << " done" << endl;
-				current_number = tile->get_other_num(current_number);
-				tried_tiles.push(domino_set());
-				added = true;
-				break;
+			if (current_used.count(tile) == 0) {
+				if (tried_tiles.top().count(tile) == 0) {
+					current_train.push_back(tile);
+					current_used.emplace(tile);
+					//cout << "first: " << tile->first << " second: " << tile->second << " done" << endl;
+					current_number = tile->get_other_num(current_number);
+					tried_tiles.push(domino_set());
+					added = true;
+					break;
+				}
+			} else {
+				tried_tiles.top().emplace(tile);
 			}
 		}
 		if (!added) {
-			// If we reach here then we have gone as far as this train can go
+			// If we didn't add then we have reached the max length of this train
 			if (current_train.size() > best_trains[0].size()) {
 				best_trains.clear();
 				best_trains.push_back(current_train);
@@ -124,27 +128,19 @@ vector<vector<DominoTile*>> DominoSolver::solve_train(){
 				best_trains.push_back(current_train);
 			}
 
+			// Save last tile and then pop if off of train, also remove its level of the tried stack
 			DominoTile* last_tile = *(current_train.rbegin());
 			short last_num = last_tile->get_other_num(current_number);
 		
 			current_train.pop_back();
 			current_used.erase(last_tile);
 			current_number = last_num;
-
+			
+			tried_tiles.pop();
 			tried_tiles.top().emplace(last_tile);
-
-			if (tried_tiles.top().size() == tile_numbers[current_number].size()) {
-				if (current_train.size() == 0) {
+			
+			if (current_train.size() == 0) {
 					return best_trains;
-				}
-				last_tile = *(current_train.rbegin());
-				last_num = last_tile->get_other_num(current_number);
-
-				current_train.pop_back();
-				current_used.erase(last_tile);
-				current_number = last_num;
-
-				tried_tiles.pop();
 			}
 		}
 	}
