@@ -1,11 +1,16 @@
 #include "DominoSolver.h"
+#include "DominoInput.h"
 
 int main() {
-	DominoSolver solver;
-	solver.take_starting_tile_input();
-	solver.take_tile_input();
-	solver.build_tile_numbers();
-	solver.print_solved_train();
+	DominoInput in;
+
+	in.input_starting_domino();
+	in.input_domino_range();
+	in.input_dominos();
+	
+	DominoSolver solve(in.starting_domino, in.domino_range, in.dominos);
+
+	solve.print_solved_train();
 
 	return 0;
 }

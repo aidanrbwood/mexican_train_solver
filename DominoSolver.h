@@ -9,18 +9,15 @@ using namespace std;
 
 class DominoSolver {
 public:
-	void take_starting_tile_input();
-	void take_tile_input();
-
-	void input_starting_tile (short t);
-	void input_tiles(vector<short> t);
+	DominoSolver(short starting_domino, short domino_range, vector<DominoTile> dominos);
 	vector<vector<DominoTile*>> solve_train();
 	void print_solved_train();
-	void build_tile_numbers();
 private:	
+	short tile_range;
 	short starting_tile;
 	vector<DominoTile> tiles;
 	vector<vector<DominoTile*>> tile_numbers;
+	void build_tile_numbers();
 };
 
 #endif // DOMINO_SOLVER_H

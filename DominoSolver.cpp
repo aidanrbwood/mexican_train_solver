@@ -1,51 +1,43 @@
 #include "DominoSolver.h"
 #include <stack>
 #include <unordered_set>
-#include <fstream>
 #include <iostream>
 #include "HashDominoTilePtr.h"
 
 using domino_set = unordered_set<DominoTile*, HashDominoTilePtr>;
 
-void DominoSolver::take_starting_tile_input() {
-	ifstream inputFile;
-	inputFile.open("./starting_tile");
-	short t;
-	inputFile >> t;
-	input_starting_tile(t);
-	inputFile.close();
-}
-
-void DominoSolver::take_tile_input() {
-	ifstream inputFile;
-	inputFile.open("./tiles");
-	short t;
-	vector<short> tile_list;
-	while(inputFile >> t) {
-		tile_list.push_back(t);
-	}
-
-	input_tiles(tile_list);
-	inputFile.close();
-}
-
-void DominoSolver::input_starting_tile(short t) {
-	starting_tile = t;
-}
-
-void DominoSolver::input_tiles(vector<short> t) {
-	int index = 0;
-	while (index < t.size()) {
-		//cout<< t[index] << " " << t[index+1] << endl;
-		tiles.push_back(DominoTile(t[index], t[index+1]));
-		index += 2;
-	}
+DominoSolver::DominoSolver(short starting_domino, short domino_range, vector<DominoTile> dominos) : 
+tile_range(domino_range), 
+starting_tile(starting_domino), 
+tiles(dominos) 
+{
+	build_tile_numbers();
 }
 
 void DominoSolver::print_solved_train() {
+	const char* vert_pipe = u8"\u2551";
+	const char* horz_pipe = u8"\u2550";
+	const char* up_left = u8"\u2554";
+	const char* up_right = u8"\u2557";
+	const char* down_left = u8"\u255a";
+	const char* down_right = u8"\u255d";
+	const char* up_split = u8"\u2566";
+	const char* down_split = u8"\u2569";
 	cout << "SOLUTION(S):" << endl;
+		
 	vector<vector<DominoTile*>> t = solve_train();
+
+	cout << horz_pipe << horz_pipe;
+	if (starting_tile < 10)
+		cout << " ";
+	cout << up_right;
+	for (int x = 0; x < t[0].size(); x++){
+		cout << up_left << horz_pipe << horz_pipe << up_split << horz_pipe << horz_pipe << up_right;
+	}
+
+	cout << endl << starting_tile << vert_pipe;
 	short current_num = starting_tile;
+
 	for (vector<DominoTile*> vec : t) {
 		for (DominoTile* tile : vec) {
 			short first_num = 0;
@@ -60,14 +52,28 @@ void DominoSolver::print_solved_train() {
 				cout << "ERROR: domino tiles arent matching";
 			}
 			current_num = second_num;
-			cout << first_num << " " << second_num << " ";
+			cout << vert_pipe;
+			if (first_num < 10)
+				cout << " ";
+			cout << first_num << vert_pipe; 
+			if (second_num < 10)
+				cout << " ";
+			cout << second_num << vert_pipe;
 		}
+	}
+
+	cout << endl << horz_pipe << horz_pipe;
+	if (starting_tile < 10)
+		cout << " ";
+	cout << down_right;
+	for (int x = 0; x < t[0].size(); x++){
+		cout << down_left << horz_pipe << horz_pipe << down_split << horz_pipe << horz_pipe << down_right;
 	}
 	cout << endl << "=======================" << endl;
 }
 
 void DominoSolver::build_tile_numbers() {
-	for (int x = 0; x < 20; x++) {
+	for (int x = 0; x < tile_range; x++) {
 		tile_numbers.push_back(vector<DominoTile*>());	
 	}
 	DominoTile* tile = nullptr;
