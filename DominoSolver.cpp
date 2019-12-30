@@ -26,19 +26,19 @@ void DominoSolver::print_solved_train() {
 	cout << "SOLUTION(S):" << endl;
 		
 	vector<vector<DominoTile*>> t = solve_train();
-
-	cout << horz_pipe << horz_pipe;
-	if (starting_tile < 10)
-		cout << " ";
-	cout << up_right;
-	for (int x = 0; x < t[0].size(); x++){
-		cout << up_left << horz_pipe << horz_pipe << up_split << horz_pipe << horz_pipe << up_right;
-	}
-
-	cout << endl << starting_tile << vert_pipe;
-	short current_num = starting_tile;
-
+	
 	for (vector<DominoTile*> vec : t) {
+		cout << horz_pipe << horz_pipe;
+		if (starting_tile < 10)
+			cout << " ";
+		cout << up_right;
+		for (int x = 0; x < t[0].size(); x++){
+			cout << up_left << horz_pipe << horz_pipe << up_split << horz_pipe << horz_pipe << up_right;
+		}
+
+		cout << endl << starting_tile << vert_pipe;
+		short current_num = starting_tile;
+
 		for (DominoTile* tile : vec) {
 			short first_num = 0;
 			short second_num = 0;
@@ -49,7 +49,7 @@ void DominoSolver::print_solved_train() {
 				first_num = tile->second;
 				second_num = tile->first;
 			} else {
-				cout << "ERROR: domino tiles arent matching";
+				//cout << "ERROR: domino tiles arent matching";
 			}
 			current_num = second_num;
 			cout << vert_pipe;
@@ -60,14 +60,15 @@ void DominoSolver::print_solved_train() {
 				cout << " ";
 			cout << second_num << vert_pipe;
 		}
-	}
 
-	cout << endl << horz_pipe << horz_pipe;
-	if (starting_tile < 10)
-		cout << " ";
-	cout << down_right;
-	for (int x = 0; x < t[0].size(); x++){
-		cout << down_left << horz_pipe << horz_pipe << down_split << horz_pipe << horz_pipe << down_right;
+		cout << endl << horz_pipe << horz_pipe;
+		if (starting_tile < 10)
+			cout << " ";
+		cout << down_right;
+		for (int x = 0; x < t[0].size(); x++){
+			cout << down_left << horz_pipe << horz_pipe << down_split << horz_pipe << horz_pipe << down_right;
+		}
+		cout << endl;
 	}
 	cout << endl << "=======================" << endl;
 }
