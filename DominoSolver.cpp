@@ -15,14 +15,15 @@ tiles(dominos)
 }
 
 void DominoSolver::print_solved_train() {
-	const char* vert_pipe = u8"\u2551";
-	const char* horz_pipe = u8"\u2550";
-	const char* up_left = u8"\u2554";
-	const char* up_right = u8"\u2557";
-	const char* down_left = u8"\u255a";
-	const char* down_right = u8"\u255d";
-	const char* up_split = u8"\u2566";
-	const char* down_split = u8"\u2569";
+	const char* vert_pipe = u8"\u2503";
+	const char* horz_pipe = u8"\u2501";
+	const char* thin_pipe = u8"\u2502";
+	const char* up_left = u8"\u250f";
+	const char* up_right = u8"\u2513";
+	const char* down_left = u8"\u2517";
+	const char* down_right = u8"\u251b";
+	const char* down_split = u8"\u2537";
+	const char* up_split = u8"\u252f";
 	cout << "SOLUTION(S):" << endl;
 		
 	vector<vector<DominoTile*>> t = solve_train();
@@ -55,7 +56,7 @@ void DominoSolver::print_solved_train() {
 			cout << vert_pipe;
 			if (first_num < 10)
 				cout << " ";
-			cout << first_num << vert_pipe; 
+			cout << first_num << thin_pipe; 
 			if (second_num < 10)
 				cout << " ";
 			cout << second_num << vert_pipe;
