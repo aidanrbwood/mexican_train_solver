@@ -31,6 +31,7 @@ std::string DominoSolver::print_solved_train_string() {
 		res+=horz_pipe;
 		res+=horz_pipe;
 		res+=up_right;
+		res+=" ";
 		for (int x = 0; x < t[0].size(); x++){
 			res+=up_left;
 			res+=horz_pipe;
@@ -39,12 +40,14 @@ std::string DominoSolver::print_solved_train_string() {
 			res+=horz_pipe;
 			res+=horz_pipe;
 			res+=up_right;
+			res+=" ";
 		}
 		res+="\n";
 		if (starting_tile < 10)
 			res+=" ";
 		res+=to_string(starting_tile);
 		res+=vert_pipe;
+		res+=" ";
 		short current_num = starting_tile;
 
 		for (DominoTile* tile : vec) {
@@ -69,12 +72,14 @@ std::string DominoSolver::print_solved_train_string() {
 				res+=" ";
 			res+=to_string(second_num);
 			res+=vert_pipe;
+			res+=" ";
 		}
 
 		res+="\n";
 		res+=horz_pipe;
 		res+=horz_pipe;
 		res+=down_right;
+		res+=" ";
 		for (int x = 0; x < t[0].size(); x++){
 			res+=down_left;
 			res+=horz_pipe;
@@ -83,6 +88,7 @@ std::string DominoSolver::print_solved_train_string() {
 			res+=horz_pipe;
 			res+=horz_pipe;
 			res+=down_right;
+			res+=" ";
 		}
 		res+="\n";
 	}

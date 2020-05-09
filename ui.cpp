@@ -44,7 +44,6 @@ int main(int argc, char** argv){
 
 	ImGui_ImplGlfw_InitForOpenGL(window, true);
 	ImGui_ImplOpenGL3_Init("#version 150");
-	
 	DominoInput input;
 	string solvedTrains = "";
 	char dominos[100] = "";
@@ -61,8 +60,9 @@ int main(int argc, char** argv){
 			ImGui::ShowDemoWindow(&show_demo_window);
 		if (show_another_window)
 		{
-			ImGui::Begin("Another window", &show_another_window);	
-			ImGui::Text("Mexican Train Solver");
+			ImGui::SetNextWindowPos(ImVec2(0,0));
+			ImGui::SetNextWindowSize(ImVec2(800,600));
+			ImGui::Begin("Mexican Train Solver", &show_another_window);	
 			ImGui::InputText("Enter starting tile", startDomino, IM_ARRAYSIZE(startDomino), ImGuiInputTextFlags_CharsDecimal);
 			ImGui::InputText("Enter tile range", tileRange, IM_ARRAYSIZE(tileRange), ImGuiInputTextFlags_CharsDecimal);
 			ImGui::InputTextMultiline("Enter your dominos below", dominos, IM_ARRAYSIZE(dominos));
