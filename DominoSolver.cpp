@@ -14,6 +14,82 @@ tiles(dominos)
 	build_tile_numbers();
 }
 
+std::string DominoSolver::print_solved_train_string() {
+	const char* vert_pipe = "|";
+	const char* horz_pipe = "-";
+	const char* thin_pipe = "|";
+	const char* up_left = "*";
+	const char* up_right = "*";
+	const char* down_left = "*";
+	const char* down_right = "*";
+	const char* down_split = "*";
+	const char* up_split = "*";
+	string res;	
+	vector<vector<DominoTile*>> t = solve_train();
+	
+	for (vector<DominoTile*> vec : t) {
+		res+=horz_pipe;
+		res+=horz_pipe;
+		res+=up_right;
+		for (int x = 0; x < t[0].size(); x++){
+			res+=up_left;
+			res+=horz_pipe;
+			res+=horz_pipe;
+			res+=up_split;
+			res+=horz_pipe;
+			res+=horz_pipe;
+			res+=up_right;
+		}
+		res+="\n";
+		if (starting_tile < 10)
+			res+=" ";
+		res+=to_string(starting_tile);
+		res+=vert_pipe;
+		short current_num = starting_tile;
+
+		for (DominoTile* tile : vec) {
+			short first_num = 0;
+			short second_num = 0;
+			if (current_num == tile->first) {
+				first_num = tile->first;
+				second_num = tile->second;
+			} else if (current_num == tile->second) {
+				first_num = tile->second;
+				second_num = tile->first;
+			} else {
+				//cout << "ERROR: domino tiles arent matching";
+			}
+			current_num = second_num;
+			res+=vert_pipe;
+			if (first_num < 10)
+				res+=" ";
+			res+=to_string(first_num);
+			res+=thin_pipe; 
+			if (second_num < 10)
+				res+=" ";
+			res+=to_string(second_num);
+			res+=vert_pipe;
+		}
+
+		res+="\n";
+		res+=horz_pipe;
+		res+=horz_pipe;
+		res+=down_right;
+		for (int x = 0; x < t[0].size(); x++){
+			res+=down_left;
+			res+=horz_pipe;
+			res+=horz_pipe;
+			res+=down_split;
+			res+=horz_pipe;
+			res+=horz_pipe;
+			res+=down_right;
+		}
+		res+="\n";
+	}
+	res+="length: ";
+	res+=to_string(t[0].size());
+	return res;
+}
 void DominoSolver::print_solved_train() {
 	const char* vert_pipe = u8"\u2503";
 	const char* horz_pipe = u8"\u2501";
