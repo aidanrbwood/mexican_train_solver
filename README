@@ -1,0 +1,48 @@
+-------------------------
+mexican_train_solver
+------------------------
+
+Aidan Wood, 2020
+aidanrbwood@gmail.com
+
+This project allows you to do the one thing you never could, beat your family at mexican train
+No longer will you have to suffer putting down a train and wondering if you could have made a longer one
+Now all you have to do is enter your dominos into this program and BOOM you have your absolutely
+optimal train, your family will be astonished at your newly found mexican train abilities
+
+This project can be built with or without a UI
+
+BUILD WITH UI:
+This project's UI uses OpenGL3 and glfx in order to render its UI
+If those libraries are installed the project can be built with cmake by running: 
+
+cmake .
+
+BUILT WITHOUT UI:
+Building without UI requires no additional libraries
+The project without the UI can be built with: 
+
+cmake . -DUI=CMD
+
+WHEN USING WITHOUT UI:
+The program will then take input via 3 text files:
+starting_domino: enter the value of the starting domino
+domino_range: enter the max value of the dominos
+dominos: enter the value of the dominos in the format below
+
+dom1num1
+dom1num2
+dom2num1
+dom2num2
+dom3num1
+dom3num2
+....
+
+EX:
+10
+1
+1
+2
+3
+9
+
