@@ -21,7 +21,7 @@ int main(int argc, char** argv){
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-	GLFWwindow* window = glfwCreateWindow(800, 600, "Test Imgui", NULL, NULL);
+	GLFWwindow* window = glfwCreateWindow(800, 600, "Mexican Train Solver", NULL, NULL);
 	if (window == NULL)
 	{
 		std::cout << "Failed to create a GLFW window" << std::endl;
@@ -65,7 +65,7 @@ int main(int argc, char** argv){
 			ImGui::Begin("Mexican Train Solver", &show_another_window);	
 			ImGui::InputText("Enter starting tile", startDomino, IM_ARRAYSIZE(startDomino), ImGuiInputTextFlags_CharsDecimal);
 			ImGui::InputText("Enter tile range", tileRange, IM_ARRAYSIZE(tileRange), ImGuiInputTextFlags_CharsDecimal);
-			ImGui::InputTextMultiline("Enter your dominos below", dominos, IM_ARRAYSIZE(dominos));
+			ImGui::InputTextMultiline("Enter your dominos\none domino per line in format:\n<domino1num1> <domino1num2>\n<domino2num1> <domino2num2>\n...", dominos, IM_ARRAYSIZE(dominos));
 			if (ImGui::Button("Solve"))
 			{
 				if (input.input_dominos_char(dominos, 0) && input.input_domino_range_char(tileRange, 0) && input.input_starting_domino_char(startDomino, 0))
@@ -73,7 +73,6 @@ int main(int argc, char** argv){
 					input.print_dominos();
 					DominoSolver solver(input.starting_domino, input.domino_range, input.dominos);
 					solvedTrains = solver.print_solved_train_string();
-					//std::cout << solvedTrains << std::endl;
 				}
 				else
 				{

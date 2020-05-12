@@ -63,7 +63,6 @@ void DominoInput::construct_dominos(vector<short> t) {
 bool DominoInput::input_dominos_char(char* arr, int size)
 {
 	string str(arr);
-	std::cout << "str length: " << str.length() << std::endl;
 	dominos.clear();
 	short num1 = -1;
 	short num2 = -1;
@@ -101,7 +100,6 @@ bool DominoInput::input_dominos_char(char* arr, int size)
 					}
 					else
 					{
-						std::cout << "inner firstNum failed" << std::endl;
 						dominos.clear();
 						return false;
 					}
@@ -109,14 +107,12 @@ bool DominoInput::input_dominos_char(char* arr, int size)
 				}
 				else
 				{
-					std::cout << "outer firstNum failed" << std::endl;
 					dominos.clear();
 					return false;
 				}
 				s = SECONDNUM;
 				break;
 			case SECONDNUM:
-				std::cout << "index: " << index << std::endl;
 				if (isdigit(c) && index+1 < str.length() && (str[index+1] == '\n' || isdigit(str[index+1])))
 				{
 					short d1 = c - '0';
@@ -134,7 +130,6 @@ bool DominoInput::input_dominos_char(char* arr, int size)
 					}
 					else
 					{
-						std::cout << "inner secondNum failed" << std::endl;
 						dominos.clear();
 						return false;
 					}
@@ -146,7 +141,6 @@ bool DominoInput::input_dominos_char(char* arr, int size)
 				}
 				else
 				{
-					std::cout << "outer secondNum failed" << std::endl;
 					dominos.clear();
 					return false;
 				}
@@ -158,7 +152,6 @@ bool DominoInput::input_dominos_char(char* arr, int size)
 			case NEWLINE:
 				if (str[index] != '\n')
 				{
-					std::cout << "newlined failed" << std::endl;
 					dominos.clear();
 					return false;
 				}
