@@ -1,11 +1,13 @@
-#include "DominoSolver.h"
 #include <stack>
 #include <unordered_set>
 #include <iostream>
-#include "HashDominoTilePtr.h"
 #include <thread>
 #include <functional>
 #include <algorithm>
+
+#include "HashDominoTilePtr.h"
+#include "DominoSolver.h"
+#include "DominoList.h"
 
 DominoSolver::DominoSolver(short starting_domino, short domino_range, vector<DominoTile> dominos) : 
 tile_range(domino_range), 
@@ -184,22 +186,27 @@ vector<DominoTile*> intersect(const vector<DominoTile*> &possible_next, const st
     return result;
 }
 
-void find_train(const DominoSolver* const s, const int current_num, const std::unordered_set<DominoTile*> unused_dominos, vector<DominoTile*>** train) 
+void find_train(const DominoSolver* const s, const int current_num, const std::unordered_set<DominoTile*> unused_dominos, DominoList** train) 
 {
+    // If we used all the dominos then finish
     if (unused_dominos.size() == 0)
     {
         return;
     }
 
+    // Find the set of next possible dominos based on the current tile number
+    // Intersect the set of next possible dominos with the set of unused dominos
     const vector<DominoTile*> possible_next(s->tile_numbers.at(current_num));
     const vector<DominoTile*> available_next(intersect(possible_next, unused_dominos));
     
+    // If we haven't used all dominos, but can't add any more to the train then finish
     if (available_next.size() == 0)
     {
         return;
     }
 
-    vector<vector<DominoTile*>**> trains(available_next.size(), nullptr);
+    // Create vectors to keep track of the spawned threads and their returns
+    vector<DominoList**> trains(available_next.size(), nullptr);
     vector<std::thread*> threads(available_next.size(), nullptr);
 
     for (int x = 0; x < available_next.size(); x++)
@@ -207,7 +214,7 @@ void find_train(const DominoSolver* const s, const int current_num, const std::u
         DominoTile* d = available_next.at(x);
         std::unordered_set<DominoTile*> new_set(unused_dominos);
         new_set.erase(d);
-        trains[x] = new vector<DominoTile*>*(nullptr);
+        trains[x] = new DominoList*(nullptr);
         threads[x] = new std::thread(find_train, s, d->get_other_num(current_num), new_set, trains[x]);
     }
 
@@ -216,23 +223,28 @@ void find_train(const DominoSolver* const s, const int current_num, const std::u
         t->join();
     }
 
+    // Find the longest train spawned by all children
     int index = -1;
     int length = -1;
+    int points = -1;
     for (int x = 0; x < available_next.size(); x++)
     {
         int train_length = 0;
+        int train_points = available_next.at(x)->first + available_next.at(x)->second;
         if (*trains[x] != nullptr) 
         {
             train_length = (*trains[x])->size();
+            train_points += (*trains[x])->m_points;
         }
 
-        if (train_length > length)
+        if (train_length > length || (train_length == length && train_points > points))
         {
             if (length > 0)
             {
                 delete *trains[index];
             }
             length = train_length;
+            points = train_points;
             index = x;
         }
         else if (train_length > 0)
@@ -240,10 +252,11 @@ void find_train(const DominoSolver* const s, const int current_num, const std::u
             delete *trains[x];
         }
     }
-
+ 
+    // Append the correct tile to the longest train and then return it
     if (length <= 0)
     {
-        *train = new vector<DominoTile*>{available_next[index]};
+        *train = new DominoList{available_next[index]};
     }
     else
     {
@@ -260,7 +273,7 @@ void find_train(const DominoSolver* const s, const int current_num, const std::u
 
 vector<vector<DominoTile*>> DominoSolver::solve_train(){
     vector<vector<DominoTile*>> best_trains;
-    vector<DominoTile*>** train = new vector<DominoTile*>*;
+    DominoList** train = new DominoList*(nullptr);
 
     std::unordered_set<DominoTile*> full_set;
     
@@ -280,6 +293,8 @@ vector<vector<DominoTile*>> DominoSolver::solve_train(){
         best_trains.push_back(std::move(**train));
         delete *train;
     }
+    
+    delete train;
 
     return best_trains;
 }
