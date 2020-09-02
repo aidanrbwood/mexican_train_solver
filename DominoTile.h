@@ -1,4 +1,3 @@
-#pragma once
 #ifndef DOMINO_TILE_H
 #define DOMINO_TILE_H
 

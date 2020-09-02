@@ -3,6 +3,9 @@
 #include <unordered_set>
 #include <iostream>
 #include "HashDominoTilePtr.h"
+#include "DominoNode.h"
+#include <thread>
+#include <functional>
 
 using domino_set = unordered_set<DominoTile*, HashDominoTilePtr>;
 
@@ -162,23 +165,126 @@ void DominoSolver::build_tile_numbers() {
 	DominoTile* tile = nullptr;
 	for (int x = 0; x < tiles.size(); x++){
 		tile = &tiles[x];
-//		cout << "gfirst: " << tile->first << " second: " << tile->second << " done" << endl;
 		tile_numbers[tile->first].push_back(tile);
+        // Don't double insert double tiles
 		if (tile->first != tile->second) {
 			tile_numbers[tile->second].push_back(tile);
 		}
 	}
-/*	for (int x = 0; x < tile_numbers.size(); x++) {
-		cout << x << ": ";
-		for (int y = 0; y < tile_numbers[x].size(); y++) {
-			DominoTile* tmp = tile_numbers[x][y];
-			cout << tmp->first << " " << tmp->second << "   ";
-		}
-		cout << "\n";
-	}*/
+}
+
+vector<DominoTile*> intersect(const vector<DominoTile*> &possible_next, const std::unordered_set<DominoTile*> &unused_dominos)
+{
+    vector<DominoTile*> result;
+    for (DominoTile* d : possible_next)
+    {
+        if (unused_dominos.count(d) != 0)
+        {
+            result.push_back(d);
+        }
+    }
+    return result;
+}
+
+void find_train(DominoSolver* s, const int current_num, const std::unordered_set<DominoTile*> unused_dominos, DominoNode* &train) 
+{
+    if (unused_dominos.size() == 0)
+    {
+        return;
+    }
+    const vector<DominoTile*> possible_next(s->tile_numbers.at(current_num));
+    const vector<DominoTile*> available_next(intersect(possible_next, unused_dominos));
+    
+    if (available_next.size() == 0)
+    {
+        std::cout << "current_num: " << current_num << " no available nodes" << std::endl;
+        return;
+    }
+
+    vector<DominoNode*> trains(available_next.size(), nullptr);
+    vector<std::thread*> threads(available_next.size(), nullptr);
+
+    int x = 0;
+    for (DominoTile* d : available_next)
+    {
+        int new_num = d->get_other_num(current_num);
+        std::cout << "current_num: " << current_num << " spawning to: " << new_num << std::endl;
+        std::unordered_set<DominoTile*> new_set(unused_dominos);
+        new_set.erase(d);
+        threads[x] = new std::thread(find_train, s, new_num, new_set, std::ref(trains[x]));
+        x++;
+    }
+
+    for (std::thread* t : threads)
+    {
+        t->join();
+    }
+
+    x = 0;
+    DominoNode* longest_train = nullptr;
+    for (DominoTile* d : available_next)
+    {
+        if (trains[x] == nullptr && longest_train == nullptr)
+        {
+            longest_train = new DominoNode(d, 1);
+        }
+        else if ((trains[x] != nullptr) && (longest_train == nullptr || longest_train->length < trains[x]->length))
+        {
+            // delete current longest
+            while (longest_train != nullptr)
+            {
+                DominoNode* t = longest_train->next;
+                delete longest_train;
+                longest_train = t;
+            }
+
+            longest_train = new DominoNode(d, trains[x]->length + 1);
+            longest_train->next = trains[x];
+        } 
+        else 
+        {
+            while (trains[x] != nullptr)
+            {
+                DominoNode* t = trains[x]->next;
+                delete trains[x];
+                trains[x] = t;
+            }
+        }
+        if (threads[x] != nullptr)
+            delete threads[x];
+        x++;
+    }
+    train = longest_train;
+    std::cout << "returning from " << current_num << ": " << longest_train->length << std::endl;
 }
 
 vector<vector<DominoTile*>> DominoSolver::solve_train(){
+    vector<vector<DominoTile*>> best_trains;
+    DominoNode* train = nullptr;
+
+    std::unordered_set<DominoTile*> full_set;
+    
+    for (vector<DominoTile*> v : tile_numbers)
+    {
+        for (DominoTile* d : v)
+        {
+            full_set.insert(d);
+        }
+    }
+
+    find_train(this, starting_tile, full_set, train);
+
+    vector<DominoTile*> best_train;
+
+    while (train != nullptr)
+    {
+        best_train.push_back(train->tile);
+        train = train->next;
+    }
+
+    best_trains.push_back(best_train);
+    return best_trains;
+    /*
 	vector<vector<DominoTile*>> best_trains;
 	vector<DominoTile*> current_train;
 	
@@ -236,4 +342,6 @@ vector<vector<DominoTile*>> DominoSolver::solve_train(){
 			}
 		}
 	}
+    */
+
 }
