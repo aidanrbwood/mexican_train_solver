@@ -3,11 +3,9 @@
 #include <unordered_set>
 #include <iostream>
 #include "HashDominoTilePtr.h"
-#include "DominoNode.h"
 #include <thread>
 #include <functional>
-
-using domino_set = unordered_set<DominoTile*, HashDominoTilePtr>;
+#include <algorithm>
 
 DominoSolver::DominoSolver(short starting_domino, short domino_range, vector<DominoTile> dominos) : 
 tile_range(domino_range), 
@@ -186,33 +184,31 @@ vector<DominoTile*> intersect(const vector<DominoTile*> &possible_next, const st
     return result;
 }
 
-void find_train(DominoSolver* s, const int current_num, const std::unordered_set<DominoTile*> unused_dominos, DominoNode* &train) 
+void find_train(const DominoSolver* const s, const int current_num, const std::unordered_set<DominoTile*> unused_dominos, vector<DominoTile*>** train) 
 {
     if (unused_dominos.size() == 0)
     {
         return;
     }
+
     const vector<DominoTile*> possible_next(s->tile_numbers.at(current_num));
     const vector<DominoTile*> available_next(intersect(possible_next, unused_dominos));
     
     if (available_next.size() == 0)
     {
-        std::cout << "current_num: " << current_num << " no available nodes" << std::endl;
         return;
     }
 
-    vector<DominoNode*> trains(available_next.size(), nullptr);
+    vector<vector<DominoTile*>**> trains(available_next.size(), nullptr);
     vector<std::thread*> threads(available_next.size(), nullptr);
 
-    int x = 0;
-    for (DominoTile* d : available_next)
+    for (int x = 0; x < available_next.size(); x++)
     {
-        int new_num = d->get_other_num(current_num);
-        std::cout << "current_num: " << current_num << " spawning to: " << new_num << std::endl;
+        DominoTile* d = available_next.at(x);
         std::unordered_set<DominoTile*> new_set(unused_dominos);
         new_set.erase(d);
-        threads[x] = new std::thread(find_train, s, new_num, new_set, std::ref(trains[x]));
-        x++;
+        trains[x] = new vector<DominoTile*>*(nullptr);
+        threads[x] = new std::thread(find_train, s, d->get_other_num(current_num), new_set, trains[x]);
     }
 
     for (std::thread* t : threads)
@@ -220,47 +216,51 @@ void find_train(DominoSolver* s, const int current_num, const std::unordered_set
         t->join();
     }
 
-    x = 0;
-    DominoNode* longest_train = nullptr;
-    for (DominoTile* d : available_next)
+    int index = -1;
+    int length = -1;
+    for (int x = 0; x < available_next.size(); x++)
     {
-        if (trains[x] == nullptr && longest_train == nullptr)
+        int train_length = 0;
+        if (*trains[x] != nullptr) 
         {
-            longest_train = new DominoNode(d, 1);
+            train_length = (*trains[x])->size();
         }
-        else if ((trains[x] != nullptr) && (longest_train == nullptr || longest_train->length < trains[x]->length))
-        {
-            // delete current longest
-            while (longest_train != nullptr)
-            {
-                DominoNode* t = longest_train->next;
-                delete longest_train;
-                longest_train = t;
-            }
 
-            longest_train = new DominoNode(d, trains[x]->length + 1);
-            longest_train->next = trains[x];
-        } 
-        else 
+        if (train_length > length)
         {
-            while (trains[x] != nullptr)
+            if (length > 0)
             {
-                DominoNode* t = trains[x]->next;
-                delete trains[x];
-                trains[x] = t;
+                delete *trains[index];
             }
+            length = train_length;
+            index = x;
         }
-        if (threads[x] != nullptr)
-            delete threads[x];
-        x++;
+        else if (train_length > 0)
+        {
+            delete *trains[x];
+        }
     }
-    train = longest_train;
-    std::cout << "returning from " << current_num << ": " << longest_train->length << std::endl;
+
+    if (length <= 0)
+    {
+        *train = new vector<DominoTile*>{available_next[index]};
+    }
+    else
+    {
+        *train = *trains.at(index);
+        (*train)->push_back(available_next.at(index));
+    }
+    
+    for (int x = 0; x < available_next.size(); x++)
+    {
+        delete threads[x];
+        delete trains[x];
+    }
 }
 
 vector<vector<DominoTile*>> DominoSolver::solve_train(){
     vector<vector<DominoTile*>> best_trains;
-    DominoNode* train = nullptr;
+    vector<DominoTile*>** train = new vector<DominoTile*>*;
 
     std::unordered_set<DominoTile*> full_set;
     
@@ -274,74 +274,12 @@ vector<vector<DominoTile*>> DominoSolver::solve_train(){
 
     find_train(this, starting_tile, full_set, train);
 
-    vector<DominoTile*> best_train;
-
-    while (train != nullptr)
+    if (*train != nullptr)
     {
-        best_train.push_back(train->tile);
-        train = train->next;
+        std::reverse((*train)->begin(), (*train)->end());
+        best_trains.push_back(std::move(**train));
+        delete *train;
     }
 
-    best_trains.push_back(best_train);
     return best_trains;
-    /*
-	vector<vector<DominoTile*>> best_trains;
-	vector<DominoTile*> current_train;
-	
-	stack<domino_set> tried_tiles;
-
-	domino_set best_used;
-	domino_set current_used;
-
-	tried_tiles.push(domino_set());
-	best_trains.push_back(vector<DominoTile*>());
-
-	short current_number = starting_tile;
-	while (true) {
-		bool added = false;
-		DominoTile* tile = nullptr;
-		for (int index = 0; index < tile_numbers[current_number].size(); index++) {
-			tile = tile_numbers[current_number][index];
-			if (current_used.count(tile) == 0) {
-				if (tried_tiles.top().count(tile) == 0) {
-					current_train.push_back(tile);
-					current_used.emplace(tile);
-					//cout << "first: " << tile->first << " second: " << tile->second << " done" << endl;
-					current_number = tile->get_other_num(current_number);
-					tried_tiles.push(domino_set());
-					added = true;
-					break;
-				}
-			} else {
-				tried_tiles.top().emplace(tile);
-			}
-		}
-		if (!added) {
-			if (current_train.size()) {
-				// If we didn't add then we have reached the max length of this train
-				if (current_train.size() > best_trains[0].size()) {
-					best_trains.clear();
-					best_trains.push_back(current_train);
-				} else if (current_train.size() == best_trains[0].size()) {
-					best_trains.push_back(current_train);
-				}
-
-				// Save last tile and then pop if off of train, also remove its level of the tried stack
-				DominoTile* last_tile = *(current_train.rbegin());
-				short last_num = last_tile->get_other_num(current_number);
-		
-				current_train.pop_back();
-				current_used.erase(last_tile);
-				current_number = last_num;
-			
-				tried_tiles.pop();
-				tried_tiles.top().emplace(last_tile);
-			}
-			if (current_train.size() == 0 && tried_tiles.top().size() == tile_numbers[starting_tile].size()) {
-				return best_trains;
-			}
-		}
-	}
-    */
-
 }
