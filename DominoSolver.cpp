@@ -173,19 +173,54 @@ void DominoSolver::build_tile_numbers() {
 	}
 }
 
-vector<DominoTile*> intersect(const vector<DominoTile*> &possible_next, const std::unordered_set<DominoTile*> &unused_dominos)
+/***********************************************************
+intersect
+Takes input of one vector of DominoTile* and a hashmap
+of DominoTile* and intersects them to return a vector
+of DominoTile* such that this vector contains all the
+common DominoTile* between the two inputs
+***********************************************************/
+vector<DominoTile*>* intersect(const vector<DominoTile*> &possible_next, const std::unordered_set<DominoTile*> &unused_dominos)
 {
-    vector<DominoTile*> result;
+    vector<DominoTile*>* result = new vector<DominoTile*>();
     for (DominoTile* d : possible_next)
     {
         if (unused_dominos.count(d) != 0)
         {
-            result.push_back(d);
+            result->push_back(d);
         }
     }
     return result;
 }
 
+/***********************************************************************************************
+find_train
+This function actually finds the longest possible train and then returns it back
+The function takes input of a pointer to a DominoSolver instance, the "current domino" (current
+meaning the domino the next domino needs to link to), the set of all the dominos currently not
+used by the train so far, and a double pointer to a DominoList object which will be used to 
+return the longest train computed
+
+This function is thread-wise recursive, meaning that it can spawn multiple threads
+performing the same function, and join on all these threads before returning
+
+The basic functionality is based on the current domino and the current unused dominos by the
+it will find the set of actual possible dominos available to be used as the next domino, for
+each possible domino it will remove that domino from the set of unused dominos (therefore
+"adding" it to the train) and used that modified version of the unused set + the new current
+domino to spawn a new instance of find train in a child thread
+
+Once all the children have returned it compares all the returned trains by the following
+criteria in order of importance:
+1. Train length
+2. Train points
+
+This criteria are chosen by myself because of the goals of mexican train, you primarily want
+to run out of dominos (and therefore use as many dominos as possible when constructing your
+initial train), but if you have several of equal length you want to optimize for laying down
+as many points as possible so in the event that someone else wins that round you record less
+points.
+***********************************************************************************************/
 void find_train(const DominoSolver* const s, const int current_num, const std::unordered_set<DominoTile*> unused_dominos, DominoList** train) 
 {
     // If we used all the dominos then finish
@@ -197,21 +232,22 @@ void find_train(const DominoSolver* const s, const int current_num, const std::u
     // Find the set of next possible dominos based on the current tile number
     // Intersect the set of next possible dominos with the set of unused dominos
     const vector<DominoTile*> possible_next(s->tile_numbers.at(current_num));
-    const vector<DominoTile*> available_next(intersect(possible_next, unused_dominos));
+    const vector<DominoTile*>* available_next = intersect(possible_next, unused_dominos);
     
     // If we haven't used all dominos, but can't add any more to the train then finish
-    if (available_next.size() == 0)
+    if (available_next->size() == 0)
     {
+        delete available_next;
         return;
     }
 
     // Create vectors to keep track of the spawned threads and their returns
-    vector<DominoList**> trains(available_next.size(), nullptr);
-    vector<std::thread*> threads(available_next.size(), nullptr);
+    vector<DominoList**> trains(available_next->size(), nullptr);
+    vector<std::thread*> threads(available_next->size(), nullptr);
 
-    for (int x = 0; x < available_next.size(); x++)
+    for (int x = 0; x < available_next->size(); x++)
     {
-        DominoTile* d = available_next.at(x);
+        DominoTile* d = available_next->at(x);
         std::unordered_set<DominoTile*> new_set(unused_dominos);
         new_set.erase(d);
         trains[x] = new DominoList*(nullptr);
@@ -227,10 +263,10 @@ void find_train(const DominoSolver* const s, const int current_num, const std::u
     int index = -1;
     int length = -1;
     int points = -1;
-    for (int x = 0; x < available_next.size(); x++)
+    for (int x = 0; x < available_next->size(); x++)
     {
         int train_length = 0;
-        int train_points = available_next.at(x)->first + available_next.at(x)->second;
+        int train_points = available_next->at(x)->first + available_next->at(x)->second;
         if (*trains[x] != nullptr) 
         {
             train_length = (*trains[x])->size();
@@ -256,19 +292,20 @@ void find_train(const DominoSolver* const s, const int current_num, const std::u
     // Append the correct tile to the longest train and then return it
     if (length <= 0)
     {
-        *train = new DominoList{available_next[index]};
+        *train = new DominoList{available_next->at(index)};
     }
     else
     {
         *train = *trains.at(index);
-        (*train)->push_back(available_next.at(index));
+        (*train)->push_back(available_next->at(index));
     }
     
-    for (int x = 0; x < available_next.size(); x++)
+    for (int x = 0; x < available_next->size(); x++)
     {
         delete threads[x];
         delete trains[x];
     }
+    delete available_next;
 }
 
 vector<vector<DominoTile*>> DominoSolver::solve_train(){
